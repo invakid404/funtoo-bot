@@ -6,8 +6,7 @@ import { addLabel, removeLabel } from './labels';
 export const pullRequests = (app: Probot): void => {
   app.on('pull_request', async (context) => {
     const config = await getConfig(context);
-
-    const hasBadTicketLabel = context.payload.pull_request.labels.some(
+    const hasBadTicketLabel = context.payload.pull_request.labels?.some(
       (label) => label.name === config.badTicketLabel,
     );
 

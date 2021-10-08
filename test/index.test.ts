@@ -1,22 +1,34 @@
 // You can import your modules
 // import index from '../src/index'
 
-import nock from "nock";
+import nock from 'nock';
 // Requiring our app implementation
-import myProbotApp from "../src";
-import { Probot, ProbotOctokit } from "probot";
+import funtooBot from '../src';
+import { Probot, ProbotOctokit } from 'probot';
 // Requiring our fixtures
-import payload from "./fixtures/issues.opened.json";
-const issueCreatedBody = { body: "Thanks for opening this issue!" };
-const fs = require("fs");
-const path = require("path");
+import payload from './fixtures/pull_request.opened.json';
+
+import * as fs from 'fs';
+import * as path from 'path';
+import * as yaml from 'js-yaml';
 
 const privateKey = fs.readFileSync(
-  path.join(__dirname, "fixtures/mock-cert.pem"),
-  "utf-8"
+  path.join(__dirname, 'fixtures/mock-cert.pem'),
+  'utf-8',
 );
 
-describe("My Probot app", () => {
+const validTicketStatuses = ['Ready to Fix', 'In Progress'];
+
+const badTicketLabel = 'bad';
+const labelCreateBody = { name: badTicketLabel };
+const labelsAddBody = { labels: [badTicketLabel] };
+
+const config = yaml.dump({
+  badTicketLabel,
+  validTicketStatuses,
+});
+
+describe('My Probot app', () => {
   let probot: any;
 
   beforeEach(() => {
@@ -30,30 +42,54 @@ describe("My Probot app", () => {
         throttle: { enabled: false },
       }),
     });
+
     // Load our app into probot
-    probot.load(myProbotApp);
+    probot.load(funtooBot);
   });
 
-  test("creates a comment when an issue is opened", async (done) => {
-    const mock = nock("https://api.github.com")
-      // Test that we correctly return a test token
-      .post("/app/installations/2/access_tokens")
+  test('adds label when a pull request is opened with a bad title', async (done) => {
+    const mock = nock(/(github\.com|bugs\.funtoo\.org)/)
+      // Return an issue, which is in an invalid state
+      .get(/rest\/api\/2\/issue\/FL-1337.*/)
       .reply(200, {
-        token: "test",
-        permissions: {
-          issues: "write",
+        fields: {
+          status: {
+            name: 'Intake',
+          },
         },
       })
 
-      // Test that a comment is posted
-      .post("/repos/hiimbex/testing-things/issues/1/comments", (body: any) => {
-        done(expect(body).toMatchObject(issueCreatedBody));
+      // Test that we correctly return a test token
+      .post('/app/installations/1/access_tokens')
+      .reply(200, {
+        token: 'test',
+        permissions: {
+          pull_requests: 'write',
+        },
+      })
+
+      // Test that the bad ticket label is created
+      .post('/repos/invakid404/funtoo-bot/labels', (body: any) => {
+        expect(body).toMatchObject(labelCreateBody);
+
         return true;
       })
-      .reply(200);
+      .reply(200)
+
+      // Test that the bad ticket label is added
+      .post('/repos/invakid404/funtoo-bot/issues/1/labels', (body: any) => {
+        done(expect(body).toMatchObject(labelsAddBody));
+
+        return true;
+      })
+      .reply(200)
+
+      // Test that the config is being parsed correctly
+      .get('/repos/invakid404/funtoo-bot/contents/.github%2Ffuntoo-bot.yml')
+      .reply(200, config);
 
     // Receive a webhook event
-    await probot.receive({ name: "issues", payload });
+    await probot.receive(payload);
 
     expect(mock.pendingMocks()).toStrictEqual([]);
   });
@@ -63,12 +99,3 @@ describe("My Probot app", () => {
     nock.enableNetConnect();
   });
 });
-
-// For more information about testing with Jest see:
-// https://facebook.github.io/jest/
-
-// For more information about using TypeScript in your tests, Jest recommends:
-// https://github.com/kulshekhar/ts-jest
-
-// For more information about testing with Nock see:
-// https://github.com/nock/nock

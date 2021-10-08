@@ -1,0 +1,20 @@
+{
+  "name": "pull_request",
+  "payload": {
+    "action": "opened",
+    "pull_request": {
+      "number": 1,
+      "state": "open",
+      "title": "FL-1337: Do some very important updates"
+    },
+    "repository": {
+      "name": "funtoo-bot",
+      "owner": {
+        "login": "invakid404"
+      }
+    },
+    "installation": {
+      "id": 1
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # funtoo-bot
 
-> A GitHub App built with [Probot](https://github.com/probot/probot) that A Probot app
+> A bot to facilitate the Funtoo development process on GitHub
 
 ## Setup
 

@@ -21,6 +21,8 @@ const badTicketLabel = 'bad';
 const labelCreateBody = { name: badTicketLabel };
 const labelsAddBody = { labels: [badTicketLabel] };
 
+const pullRequestCloseBody = { state: 'closed' };
+
 const getBaseMock = (config: Record<string, unknown>) =>
   // Mock both GitHub and Jira APIs
   nock(/(github\.com|bugs\.funtoo\.org)/)
@@ -69,6 +71,8 @@ describe('Pull requests', () => {
   test('does nothing when a pull request is opened with a valid title', async (done) => {
     const mock = getBaseMock({
       pullRequests: {
+        enableLabel: true,
+        enableClose: false,
         badTicketLabel,
         // Consider Intake as valid
         validTicketStatuses: ['Intake'],
@@ -84,6 +88,8 @@ describe('Pull requests', () => {
   test('adds label when a pull request is opened with a bad title', async (done) => {
     const mock = getBaseMock({
       pullRequests: {
+        enableLabel: true,
+        enableClose: false,
         badTicketLabel,
         validTicketStatuses: ['In Progress', 'Ready to Fix'],
       },
@@ -99,6 +105,27 @@ describe('Pull requests', () => {
       // Test that the bad ticket label is added
       .post('/repos/invakid404/funtoo-bot/issues/1/labels', (body: any) => {
         done(expect(body).toMatchObject(labelsAddBody));
+
+        return true;
+      })
+      .reply(200);
+
+    // Receive a webhook event
+    await probot.receive(pullRequestEvent);
+
+    expect(mock.pendingMocks()).toStrictEqual([]);
+  });
+
+  test('closes pull request when it is opened with a bad title', async (done) => {
+    const mock = getBaseMock({
+      pullRequests: {
+        enableLabel: false,
+        enableClose: true,
+      },
+    })
+      // Test that pull request is being closed
+      .patch('/repos/invakid404/funtoo-bot/pulls/1', (body: any) => {
+        done(expect(body).toMatchObject(pullRequestCloseBody));
 
         return true;
       })

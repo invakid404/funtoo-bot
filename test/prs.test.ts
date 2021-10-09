@@ -3,6 +3,7 @@ import nock from 'nock';
 // Requiring our app implementation
 import funtooBot from '../src';
 import { Probot, ProbotOctokit } from 'probot';
+import { WebhookEvent } from '@octokit/webhooks';
 
 // Requiring our fixtures
 import pullRequestEvent from './fixtures/pull_request.opened.json';
@@ -50,7 +51,7 @@ const getBaseMock = (config: Record<string, unknown>) =>
     .reply(200, yaml.dump(config));
 
 describe('Pull requests', () => {
-  let probot: any;
+  let probot: Probot;
 
   beforeEach(() => {
     nock.disableNetConnect();
@@ -80,7 +81,7 @@ describe('Pull requests', () => {
     });
 
     // Receive a webhook event
-    await probot.receive(pullRequestEvent);
+    await probot.receive(pullRequestEvent as WebhookEvent);
 
     done(expect(mock.pendingMocks()).toStrictEqual([]));
   });
@@ -111,7 +112,7 @@ describe('Pull requests', () => {
       .reply(200);
 
     // Receive a webhook event
-    await probot.receive(pullRequestEvent);
+    await probot.receive(pullRequestEvent as WebhookEvent);
 
     expect(mock.pendingMocks()).toStrictEqual([]);
   });
@@ -132,7 +133,7 @@ describe('Pull requests', () => {
       .reply(200);
 
     // Receive a webhook event
-    await probot.receive(pullRequestEvent);
+    await probot.receive(pullRequestEvent as WebhookEvent);
 
     expect(mock.pendingMocks()).toStrictEqual([]);
   });

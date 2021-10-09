@@ -7,8 +7,13 @@ export const pullRequests = (app: Probot): void => {
   app.on('pull_request', async (context) => {
     const config = await getConfig(context);
 
-    const { badTicketLabel, titlePattern, validTicketStatuses } =
-      config.pullRequests;
+    const {
+      badTicketLabel,
+      enableClose,
+      enableLabel,
+      titlePattern,
+      validTicketStatuses,
+    } = config.pullRequests;
 
     const hasBadTicketLabel = context.payload.pull_request.labels?.some(
       (label) => label.name === badTicketLabel,
@@ -23,12 +28,22 @@ export const pullRequests = (app: Probot): void => {
       const ticket = await jiraClient.findIssue(ticketName);
 
       if (validTicketStatuses.has(ticket?.fields?.status?.name)) {
-        hasBadTicketLabel && (await removeLabel(context, badTicketLabel));
+        if (enableLabel && hasBadTicketLabel) {
+          await removeLabel(context, badTicketLabel);
+        }
 
         return;
       }
     } catch (error) {}
 
-    hasBadTicketLabel || (await addLabel(context, badTicketLabel));
+    if (enableLabel && !hasBadTicketLabel) {
+      await addLabel(context, badTicketLabel);
+    }
+
+    if (enableClose) {
+      await context.octokit.pulls.update(
+        context.pullRequest({ state: 'closed' }),
+      );
+    }
   });
 };

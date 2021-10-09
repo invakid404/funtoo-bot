@@ -10,8 +10,11 @@ export class Config {
 
 export class PullRequestsConfig {
   enableClose = true;
+  enableComment = true;
 
   badTicketLabel = 'bad ticket';
+
+  commentMessage = 'Pull requests must be associated with a valid Jira issue!';
 
   @Transform(({ value }) => new RegExp(value), { toClassOnly: true })
   titlePattern = /^(?<ticket>FL-\d+):.+$/;

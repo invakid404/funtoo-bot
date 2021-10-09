@@ -9,7 +9,9 @@ export const pullRequests = (app: Probot): void => {
 
     const {
       badTicketLabel,
+      commentMessage,
       enableClose,
+      enableComment,
       titlePattern,
       validTicketStatuses,
     } = config.pullRequests;
@@ -37,6 +39,12 @@ export const pullRequests = (app: Probot): void => {
 
     if (!hasBadTicketLabel) {
       await addLabel(context, badTicketLabel);
+
+      if (enableComment) {
+        await context.octokit.issues.createComment(
+          context.issue({ body: commentMessage }),
+        );
+      }
     }
 
     if (enableClose) {

@@ -18,11 +18,12 @@ const privateKey = fs.readFileSync(
 );
 
 const badTicketLabel = 'bad';
+const commentMessage = 'Bad ticket!';
 
 const labelCreateBody = { name: badTicketLabel };
 const labelsAddBody = { labels: [badTicketLabel] };
-
 const pullRequestCloseBody = { state: 'closed' };
+const commentBody = { body: commentMessage };
 
 const getBaseMock = (config: Record<string, unknown>) =>
   // Mock both GitHub and Jira APIs
@@ -72,9 +73,6 @@ describe('Pull requests', () => {
   test('does nothing when a pull request is opened with a valid title', (done) => {
     const mock = getBaseMock({
       pullRequests: {
-        enableLabel: true,
-        enableClose: false,
-        badTicketLabel,
         // Consider Intake as valid
         validTicketStatuses: ['Intake'],
       },
@@ -86,12 +84,11 @@ describe('Pull requests', () => {
       .then(() => done(expect(mock.pendingMocks()).toStrictEqual([])));
   });
 
-  test('adds label when a pull request is opened with a bad title', (done) => {
+  test('correctly handles pull requests with bad tickets', (done) => {
     const mock = getBaseMock({
       pullRequests: {
-        enableLabel: true,
-        enableClose: false,
         badTicketLabel,
+        commentMessage,
         validTicketStatuses: ['In Progress', 'Ready to Fix'],
       },
     })
@@ -105,26 +102,24 @@ describe('Pull requests', () => {
 
       // Test that the bad ticket label is added
       .post('/repos/invakid404/funtoo-bot/issues/1/labels', (body: unknown) => {
-        done(expect(body).toMatchObject(labelsAddBody));
+        expect(body).toMatchObject(labelsAddBody);
 
         return true;
       })
-      .reply(200);
+      .reply(200)
 
-    // Receive a webhook event
-    probot
-      .receive(pullRequestEvent as EmitterWebhookEvent)
-      .then(() => expect(mock.pendingMocks()).toStrictEqual([]));
-  });
+      // Test that a comment is posted
+      .post(
+        '/repos/invakid404/funtoo-bot/issues/1/comments',
+        (body: unknown) => {
+          expect(body).toMatchObject(commentBody);
 
-  test('closes pull request when it is opened with a bad title', (done) => {
-    const mock = getBaseMock({
-      pullRequests: {
-        enableLabel: false,
-        enableClose: true,
-      },
-    })
-      // Test that pull request is being closed
+          return true;
+        },
+      )
+      .reply(200)
+
+      // Test that pull request is closed
       .patch('/repos/invakid404/funtoo-bot/pulls/1', (body: unknown) => {
         done(expect(body).toMatchObject(pullRequestCloseBody));
 

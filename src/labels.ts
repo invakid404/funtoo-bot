@@ -4,16 +4,24 @@ export const addLabel = async (
   context: Context,
   label: string,
 ): Promise<void> => {
-  await ensureLabelExists(context, label);
+  try {
+    await ensureLabelExists(context, label);
 
-  await context.octokit.issues.addLabels(context.issue({ labels: [label] }));
+    await context.octokit.issues.addLabels(context.issue({ labels: [label] }));
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 export const removeLabel = async (
   context: Context,
   label: string,
 ): Promise<void> => {
-  await context.octokit.issues.removeLabel(context.issue({ name: label }));
+  try {
+    await context.octokit.issues.removeLabel(context.issue({ name: label }));
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 export const ensureLabelExists = async (

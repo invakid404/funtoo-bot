@@ -10,7 +10,6 @@ export const pullRequests = (app: Probot): void => {
     const {
       badTicketLabel,
       enableClose,
-      enableLabel,
       titlePattern,
       validTicketStatuses,
     } = config.pullRequests;
@@ -28,7 +27,7 @@ export const pullRequests = (app: Probot): void => {
       const ticket = await jiraClient.findIssue(ticketName);
 
       if (validTicketStatuses.has(ticket?.fields?.status?.name)) {
-        if (enableLabel && hasBadTicketLabel) {
+        if (hasBadTicketLabel) {
           await removeLabel(context, badTicketLabel);
         }
 
@@ -36,7 +35,7 @@ export const pullRequests = (app: Probot): void => {
       }
     } catch (error) {}
 
-    if (enableLabel && !hasBadTicketLabel) {
+    if (!hasBadTicketLabel) {
       await addLabel(context, badTicketLabel);
     }
 

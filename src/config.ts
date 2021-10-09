@@ -9,7 +9,6 @@ export class Config {
 }
 
 export class PullRequestsConfig {
-  enableLabel = true;
   enableClose = true;
 
   badTicketLabel = 'bad ticket';

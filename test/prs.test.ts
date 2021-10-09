@@ -23,7 +23,6 @@ const commentMessage = 'Bad ticket!';
 const labelCreateBody = { name: badTicketLabel };
 const labelsAddBody = { labels: [badTicketLabel] };
 const pullRequestCloseBody = { state: 'closed' };
-const commentBody = { body: commentMessage };
 
 const getBaseMock = (config: Record<string, unknown>) =>
   // Mock both GitHub and Jira APIs
@@ -106,17 +105,6 @@ describe('Pull requests', () => {
 
         return true;
       })
-      .reply(200)
-
-      // Test that a comment is posted
-      .post(
-        '/repos/invakid404/funtoo-bot/issues/1/comments',
-        (body: unknown) => {
-          expect(body).toMatchObject(commentBody);
-
-          return true;
-        },
-      )
       .reply(200)
 
       // Test that pull request is closed

@@ -7,14 +7,8 @@ export const pullRequests = (app: Probot): void => {
   app.on('pull_request', async (context) => {
     const config = await getConfig(context);
 
-    const {
-      badTicketLabel,
-      commentMessage,
-      enableClose,
-      enableComment,
-      titlePattern,
-      validTicketStatuses,
-    } = config.pullRequests;
+    const { badTicketLabel, enableClose, titlePattern, validTicketStatuses } =
+      config.pullRequests;
 
     const hasBadTicketLabel = context.payload.pull_request.labels?.some(
       (label) => label.name === badTicketLabel,
@@ -35,21 +29,37 @@ export const pullRequests = (app: Probot): void => {
 
         return;
       }
-    } catch (error) {}
+    } catch (error) {
+      // Ticket is invalid
+    }
 
     if (!hasBadTicketLabel) {
       await addLabel(context, badTicketLabel);
-
-      if (enableComment) {
-        await context.octokit.issues.createComment(
-          context.issue({ body: commentMessage }),
-        );
-      }
     }
 
     if (enableClose) {
       await context.octokit.pulls.update(
         context.pullRequest({ state: 'closed' }),
+      );
+    }
+  });
+
+  app.on('pull_request.labeled', async (context) => {
+    const {
+      pullRequests: { badTicketLabel, commentMessage, enableComment },
+    } = await getConfig(context);
+
+    const {
+      label: { name },
+    } = context.payload;
+
+    if (badTicketLabel !== name) {
+      return;
+    }
+
+    if (enableComment) {
+      await context.octokit.issues.createComment(
+        context.issue({ body: commentMessage }),
       );
     }
   });

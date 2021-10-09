@@ -45,6 +45,10 @@ export const pullRequests = (app: Probot): void => {
   });
 
   app.on('pull_request.labeled', async (context) => {
+    if (!context.isBot) {
+      return;
+    }
+
     const {
       pullRequests: { badTicketLabel, commentMessage, enableComment },
     } = await getConfig(context);

@@ -3,7 +3,7 @@ import nock from 'nock';
 // Requiring our app implementation
 import funtooBot from '../src';
 import { Probot, ProbotOctokit } from 'probot';
-import { WebhookEvent } from '@octokit/webhooks';
+import { EmitterWebhookEvent } from '@octokit/webhooks';
 
 // Requiring our fixtures
 import pullRequestEvent from './fixtures/pull_request.opened.json';
@@ -69,7 +69,7 @@ describe('Pull requests', () => {
     probot.load(funtooBot);
   });
 
-  test('does nothing when a pull request is opened with a valid title', async (done) => {
+  test('does nothing when a pull request is opened with a valid title', (done) => {
     const mock = getBaseMock({
       pullRequests: {
         enableLabel: true,
@@ -81,12 +81,12 @@ describe('Pull requests', () => {
     });
 
     // Receive a webhook event
-    await probot.receive(pullRequestEvent as WebhookEvent);
-
-    done(expect(mock.pendingMocks()).toStrictEqual([]));
+    probot
+      .receive(pullRequestEvent as EmitterWebhookEvent)
+      .then(() => done(expect(mock.pendingMocks()).toStrictEqual([])));
   });
 
-  test('adds label when a pull request is opened with a bad title', async (done) => {
+  test('adds label when a pull request is opened with a bad title', (done) => {
     const mock = getBaseMock({
       pullRequests: {
         enableLabel: true,
@@ -96,7 +96,7 @@ describe('Pull requests', () => {
       },
     })
       // Test that the bad ticket label is created
-      .post('/repos/invakid404/funtoo-bot/labels', (body: any) => {
+      .post('/repos/invakid404/funtoo-bot/labels', (body: unknown) => {
         expect(body).toMatchObject(labelCreateBody);
 
         return true;
@@ -104,7 +104,7 @@ describe('Pull requests', () => {
       .reply(200)
 
       // Test that the bad ticket label is added
-      .post('/repos/invakid404/funtoo-bot/issues/1/labels', (body: any) => {
+      .post('/repos/invakid404/funtoo-bot/issues/1/labels', (body: unknown) => {
         done(expect(body).toMatchObject(labelsAddBody));
 
         return true;
@@ -112,12 +112,12 @@ describe('Pull requests', () => {
       .reply(200);
 
     // Receive a webhook event
-    await probot.receive(pullRequestEvent as WebhookEvent);
-
-    expect(mock.pendingMocks()).toStrictEqual([]);
+    probot
+      .receive(pullRequestEvent as EmitterWebhookEvent)
+      .then(() => expect(mock.pendingMocks()).toStrictEqual([]));
   });
 
-  test('closes pull request when it is opened with a bad title', async (done) => {
+  test('closes pull request when it is opened with a bad title', (done) => {
     const mock = getBaseMock({
       pullRequests: {
         enableLabel: false,
@@ -125,7 +125,7 @@ describe('Pull requests', () => {
       },
     })
       // Test that pull request is being closed
-      .patch('/repos/invakid404/funtoo-bot/pulls/1', (body: any) => {
+      .patch('/repos/invakid404/funtoo-bot/pulls/1', (body: unknown) => {
         done(expect(body).toMatchObject(pullRequestCloseBody));
 
         return true;
@@ -133,9 +133,9 @@ describe('Pull requests', () => {
       .reply(200);
 
     // Receive a webhook event
-    await probot.receive(pullRequestEvent as WebhookEvent);
-
-    expect(mock.pendingMocks()).toStrictEqual([]);
+    probot
+      .receive(pullRequestEvent as EmitterWebhookEvent)
+      .then(() => expect(mock.pendingMocks()).toStrictEqual([]));
   });
 
   afterEach(() => {

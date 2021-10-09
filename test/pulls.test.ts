@@ -68,9 +68,11 @@ describe('Pull requests', () => {
 
   test('does nothing when a pull request is opened with a valid title', async (done) => {
     const mock = getBaseMock({
-      badTicketLabel,
-      // Consider Intake as valid
-      validTicketStatuses: ['Intake'],
+      pullRequests: {
+        badTicketLabel,
+        // Consider Intake as valid
+        validTicketStatuses: ['Intake'],
+      },
     });
 
     // Receive a webhook event
@@ -81,8 +83,10 @@ describe('Pull requests', () => {
 
   test('adds label when a pull request is opened with a bad title', async (done) => {
     const mock = getBaseMock({
-      badTicketLabel,
-      validTicketStatuses: ['In Progress', 'Ready to Fix'],
+      pullRequests: {
+        badTicketLabel,
+        validTicketStatuses: ['In Progress', 'Ready to Fix'],
+      },
     })
       // Test that the bad ticket label is created
       .post('/repos/invakid404/funtoo-bot/labels', (body: any) => {

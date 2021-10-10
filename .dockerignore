@@ -7,6 +7,6 @@
 **/coverage
 **/.env
 **/.editorconfig
-**/dist
+**/lib
 **/*.pem
 Dockerfile

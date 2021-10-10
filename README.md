@@ -15,11 +15,7 @@ npm start
 ## Docker
 
 ```sh
-# 1. Build container
-docker build -t funtoo-bot .
-
-# 2. Start container
-docker run -e APP_ID=<app-id> -e PRIVATE_KEY=<pem-value> funtoo-bot
+docker run -e APP_ID=<app-id> -e PRIVATE_KEY=<pem-value> ghcr.io/invakid404/funtoo-bot
 ```
 
 ## Contributing

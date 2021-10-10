@@ -1,4 +1,4 @@
-FROM node:14-slim AS builder
+FROM node:14 AS builder
 WORKDIR /usr/src/app
 
 COPY package*.json ./
@@ -9,7 +9,7 @@ COPY tsconfig.json ./
 
 RUN npm run build
 
-FROM node:14-slim
+FROM node:14
 WORKDIR /usr/src/app
 
 ENV NODE_ENV="production"

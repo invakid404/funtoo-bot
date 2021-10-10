@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsc",
     "start": "probot run ./lib/index.js",
-    "lint": "eslint \"src/**/*.ts\"",
+    "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
+    "prettier": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "test": "jest"
   },
   "dependencies": {

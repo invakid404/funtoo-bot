@@ -20,4 +20,6 @@ RUN npm cache clean --force
 
 COPY --from=builder /usr/src/app/lib lib/
 
+EXPOSE 3000
+
 CMD [ "npm", "start" ]

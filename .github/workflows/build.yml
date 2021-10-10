@@ -17,7 +17,15 @@ jobs:
         with:
           node-version: '14'
 
+      - name: Cache build
+        id: cache-build
+        uses: actions/cache@v2
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+
       - name: Cache .npm
+        if: steps.cache-build.outputs.cache-hit != 'true'
         uses: actions/cache@v2
         with:
           path: ~/.npm
@@ -26,18 +34,14 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
+        if: steps.cache-build.outputs.cache-hit != 'true'
         run: |
           npm ci
 
       - name: Build
+        if: steps.cache-build.outputs.cache-hit != 'true'
         run: |
           npm run build
-
-      - name: Cache build
-        uses: actions/cache@v2
-        with:
-          path: ./*
-          key: ${{ github.sha }}
 
   prettier:
     runs-on: ubuntu-latest
